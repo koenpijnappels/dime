@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light — warm ivory / sand, Mediterranean accents */
+  --c-sand: 244 238 226; /* page background */
+  --c-paper: 253 250 243; /* card surface */
+  --c-ink: 53 44 38; /* primary text, warm brown-black */
+  --c-muted: 124 110 98; /* secondary text */
+  --c-line: 224 213 196; /* borders / hairlines */
+  --c-terracotta: 192 105 74;
+  --c-olive: 122 124 76;
+  --c-sea: 86 122 130;
+  --c-clay: 168 120 92;
+
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+}
+
+.dark {
+  /* Dark — warm charcoal / deep brown, never pure black */
+  --c-sand: 30 27 24;
+  --c-paper: 42 38 34;
+  --c-ink: 240 233 222;
+  --c-muted: 178 166 152;
+  --c-line: 64 58 51;
+  --c-terracotta: 210 128 98;
+  --c-olive: 156 158 108;
+  --c-sea: 124 162 170;
+  --c-clay: 196 152 122;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: rgb(var(--c-sand));
+  color: rgb(var(--c-ink));
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Subtle paper grain, generated with cheap radial gradients (no images). */
+  background-image:
+    radial-gradient(rgba(120, 90, 60, 0.035) 1px, transparent 1px),
+    radial-gradient(rgba(120, 90, 60, 0.025) 1px, transparent 1px);
+  background-position:
+    0 0,
+    8px 8px;
+  background-size: 16px 16px;
+  background-attachment: fixed;
+  overscroll-behavior-y: none;
+}
+
+/* Respect the iOS safe areas in standalone PWA mode. */
+.safe-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Disable text selection on tappable controls for an app-like feel. */
+button {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
