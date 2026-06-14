@@ -56,7 +56,12 @@ for (const mode of MODES) {
 }
 
 // 2) mas-profundo deepens: average intensity of the first 5 cards should be
-//    lower than the average of the last 5, across many shuffles.
+//    lower than the average of cards 13-17 (the point the ramp reaches its
+//    target ceiling), across many shuffles. We compare against this
+//    mid-session window rather than the final 5 cards because, with large
+//    pools, the cards left over after full exhaustion skew back toward low
+//    intensity (everything deeper has already been shown) — that's a
+//    leftover-pool artifact, not a sign the flow failed to deepen.
 function runDeep(level) {
   const seen = new Set();
   const seq = [];
@@ -71,22 +76,22 @@ function runDeep(level) {
 
 for (const level of LEVELS) {
   let firstSum = 0;
-  let lastSum = 0;
+  let midSum = 0;
   const runs = 40;
   for (let i = 0; i < runs; i++) {
     const seq = runDeep(level);
     const first = seq.slice(0, 5).reduce((a, b) => a + b, 0) / 5;
-    const last = seq.slice(-5).reduce((a, b) => a + b, 0) / 5;
+    const mid = seq.slice(12, 17).reduce((a, b) => a + b, 0) / 5;
     firstSum += first;
-    lastSum += last;
+    midSum += mid;
   }
   const avgFirst = (firstSum / runs).toFixed(2);
-  const avgLast = (lastSum / runs).toFixed(2);
+  const avgMid = (midSum / runs).toFixed(2);
   console.log(
-    `mas-profundo/${level}: avg intensity first5=${avgFirst} last5=${avgLast}`
+    `mas-profundo/${level}: avg intensity first5=${avgFirst} mid5(13-17)=${avgMid}`
   );
-  if (Number(avgLast) <= Number(avgFirst)) {
-    fail(`mas-profundo/${level} did not deepen (first ${avgFirst} >= last ${avgLast})`);
+  if (Number(avgMid) <= Number(avgFirst)) {
+    fail(`mas-profundo/${level} did not deepen (first ${avgFirst} >= mid ${avgMid})`);
   }
 }
 

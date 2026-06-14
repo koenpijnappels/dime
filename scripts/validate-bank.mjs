@@ -27,7 +27,7 @@ const ok = (cond, msg) => {
   if (!cond) errors.push(msg);
 };
 
-ok(cards.length === 500, `expected 500 cards, found ${cards.length}`);
+ok(cards.length === 1500, `expected 1500 cards, found ${cards.length}`);
 
 // unique ids
 const ids = new Set();
@@ -37,14 +37,14 @@ for (const c of cards) {
 }
 
 const TARGET = {
-  mezcla: 60,
-  rompehielos: 60,
-  amigos: 60,
-  conocerse: 75,
-  cita: 65,
-  "mas-profundo": 65,
-  debate: 60,
-  practica: 55,
+  mezcla: 180,
+  rompehielos: 180,
+  amigos: 180,
+  conocerse: 225,
+  cita: 195,
+  "mas-profundo": 195,
+  debate: 180,
+  practica: 165,
 };
 const LEVELS = ["principiante", "intermedio", "avanzado"];
 
