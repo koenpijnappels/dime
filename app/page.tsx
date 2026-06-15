@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import StartScreen from "@/components/StartScreen";
 import CardScreen from "@/components/CardScreen";
+import FeedbackPrompt from "@/components/FeedbackPrompt";
 import { QUESTIONS } from "@/lib/questions";
 import { pickNextCard } from "@/lib/cardEngine";
 import { haptic } from "@/lib/haptics";
@@ -12,6 +13,22 @@ import {
   storeTheme,
   getStoredTheme,
 } from "@/lib/theme";
+import {
+  trackAppOpened,
+  trackDifficultySelected,
+  trackModeSelected,
+  trackSessionStarted,
+  trackCardViewed,
+  trackNextCard,
+  trackPreviousCard,
+  trackTranslationRevealed,
+  trackChangeModeClicked,
+  trackFeedbackPromptShown,
+  trackFeedbackResponse,
+  trackShareClicked,
+  type FeedbackResponse,
+  type NextMethod,
+} from "@/lib/analytics";
 import type {
   ConversationCard,
   Difficulty,
@@ -23,6 +40,13 @@ type Phase = "start" | "cards";
 
 const LS_LEVEL = "dime:level";
 const LS_MODE = "dime:mode";
+
+// Per-browser-session keys for the feedback prompt + app-opened guard.
+const SS_APP_OPENED = "dime:app_opened";
+const SS_CARDS_VIEWED = "dime_cards_viewed_count";
+const SS_FEEDBACK_HANDLED = "dime_feedback_prompt_handled";
+
+const FEEDBACK_THRESHOLD = 20;
 
 export default function Home() {
   const [phase, setPhase] = useState<Phase>("start");
@@ -38,7 +62,13 @@ export default function Home() {
 
   const [theme, setTheme] = useState<Theme>("light");
 
-  // ── Theme + persisted selections + service worker (client only) ──
+  // Feedback prompt state (after 20 cards viewed this session)
+  const [cardsViewed, setCardsViewed] = useState(0);
+  const [feedbackHandled, setFeedbackHandled] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const feedbackShownRef = useRef(false);
+
+  // ── Theme + persisted selections + service worker + analytics (client) ──
   useEffect(() => {
     setTheme(resolveInitialTheme());
     try {
@@ -57,6 +87,27 @@ export default function Home() {
     } catch {
       // ignore storage errors
     }
+
+    // Restore feedback progress so it survives reloads within the session.
+    try {
+      const storedCount = Number(sessionStorage.getItem(SS_CARDS_VIEWED));
+      if (Number.isFinite(storedCount) && storedCount > 0) {
+        setCardsViewed(storedCount);
+      }
+      if (sessionStorage.getItem(SS_FEEDBACK_HANDLED) === "1") {
+        setFeedbackHandled(true);
+        feedbackShownRef.current = true;
+      }
+      // app_opened fires once per browser session.
+      if (sessionStorage.getItem(SS_APP_OPENED) !== "1") {
+        sessionStorage.setItem(SS_APP_OPENED, "1");
+        trackAppOpened();
+      }
+    } catch {
+      // sessionStorage may be unavailable; still fire once for this load.
+      trackAppOpened();
+    }
+
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {
         // installability is best-effort
@@ -79,10 +130,38 @@ export default function Home() {
     applyTheme(theme);
   }, [theme]);
 
+  // Open the feedback prompt once, after 20 cards, while viewing cards.
+  useEffect(() => {
+    if (
+      phase === "cards" &&
+      !feedbackHandled &&
+      !feedbackShownRef.current &&
+      cardsViewed >= FEEDBACK_THRESHOLD
+    ) {
+      feedbackShownRef.current = true;
+      setFeedbackOpen(true);
+      trackFeedbackPromptShown();
+    }
+  }, [phase, cardsViewed, feedbackHandled]);
+
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next: Theme = prev === "dark" ? "light" : "dark";
       storeTheme(next);
+      return next;
+    });
+  }, []);
+
+  // Record that a brand-new card was shown: analytics + session counter.
+  const registerCardView = useCallback((card: ConversationCard) => {
+    trackCardViewed(card);
+    setCardsViewed((n) => {
+      const next = n + 1;
+      try {
+        sessionStorage.setItem(SS_CARDS_VIEWED, String(next));
+      } catch {
+        // ignore storage errors
+      }
       return next;
     });
   }, []);
@@ -96,8 +175,9 @@ export default function Home() {
       setSeenIds(first ? new Set([first.id]) : new Set());
       setExhausted(first === null);
       setShowTranslation(false);
+      if (first) registerCardView(first);
     },
-    []
+    [registerCardView]
   );
 
   const handleStart = useCallback(() => {
@@ -108,31 +188,37 @@ export default function Home() {
     } catch {
       // ignore
     }
+    trackSessionStarted(level, mode);
     startFlow(mode, level);
     setPhase("cards");
   }, [level, mode, startFlow]);
 
-  const handleNext = useCallback(() => {
-    if (!mode || !level || exhausted) return;
-    setShowTranslation(false);
+  const handleNext = useCallback(
+    (method: NextMethod = "button") => {
+      if (!mode || !level || exhausted) return;
+      trackNextCard(method, level, mode);
+      setShowTranslation(false);
 
-    // Re-show a card already ahead in history (user had gone back).
-    if (index < history.length - 1) {
-      setIndex(index + 1);
+      // Re-show a card already ahead in history (user had gone back).
+      if (index < history.length - 1) {
+        setIndex(index + 1);
+        haptic(10);
+        return;
+      }
+
+      const next = pickNextCard(QUESTIONS, mode, level, seenIds, history.length);
+      if (!next) {
+        setExhausted(true);
+        return;
+      }
+      setHistory((h) => [...h, next]);
+      setSeenIds((s) => new Set(s).add(next.id));
+      setIndex((i) => i + 1);
+      registerCardView(next);
       haptic(10);
-      return;
-    }
-
-    const next = pickNextCard(QUESTIONS, mode, level, seenIds, history.length);
-    if (!next) {
-      setExhausted(true);
-      return;
-    }
-    setHistory((h) => [...h, next]);
-    setSeenIds((s) => new Set(s).add(next.id));
-    setIndex((i) => i + 1);
-    haptic(10);
-  }, [mode, level, exhausted, index, history, seenIds]);
+    },
+    [mode, level, exhausted, index, history, seenIds, registerCardView]
+  );
 
   const handleBack = useCallback(() => {
     setShowTranslation(false);
@@ -142,12 +228,26 @@ export default function Home() {
       return;
     }
     if (index > 0) {
+      if (mode && level) trackPreviousCard(level, mode);
       setIndex(index - 1);
       haptic(10);
     }
-  }, [exhausted, index]);
+  }, [exhausted, index, mode, level]);
+
+  const handleToggleTranslation = useCallback(() => {
+    setShowTranslation((v) => {
+      const next = !v;
+      // Only the reveal is interesting; hiding is not tracked.
+      if (next) {
+        const card = history[index];
+        if (card) trackTranslationRevealed(card);
+      }
+      return next;
+    });
+  }, [history, index]);
 
   const handleHome = useCallback(() => {
+    trackChangeModeClicked();
     setPhase("start");
     setExhausted(false);
   }, []);
@@ -157,8 +257,32 @@ export default function Home() {
   }, [mode, level, startFlow]);
 
   // Changing level or mode invalidates the current flow.
-  const handleLevelChange = useCallback((l: Difficulty) => setLevel(l), []);
-  const handleModeChange = useCallback((m: Mode) => setMode(m), []);
+  const handleLevelChange = useCallback((l: Difficulty) => {
+    trackDifficultySelected(l);
+    setLevel(l);
+  }, []);
+  const handleModeChange = useCallback((m: Mode) => {
+    trackModeSelected(m);
+    setMode(m);
+  }, []);
+
+  // ── Feedback prompt callbacks ──
+  const handleFeedbackResponse = useCallback((response: FeedbackResponse) => {
+    trackFeedbackResponse(response);
+    setFeedbackHandled(true);
+    try {
+      sessionStorage.setItem(SS_FEEDBACK_HANDLED, "1");
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  const handleFeedbackClose = useCallback(() => setFeedbackOpen(false), []);
+
+  const handleShareClicked = useCallback(
+    () => trackShareClicked("feedback_prompt"),
+    []
+  );
 
   if (phase === "start" || !mode || !level) {
     return (
@@ -187,10 +311,19 @@ export default function Home() {
       canGoBack={canGoBack}
       onBack={handleBack}
       onNext={handleNext}
-      onToggleTranslation={() => setShowTranslation((v) => !v)}
+      onToggleTranslation={handleToggleTranslation}
       onToggleTheme={toggleTheme}
       onHome={handleHome}
       onRestart={handleRestart}
+      feedback={
+        feedbackOpen ? (
+          <FeedbackPrompt
+            onResponse={handleFeedbackResponse}
+            onClose={handleFeedbackClose}
+            onShareClicked={handleShareClicked}
+          />
+        ) : null
+      }
     />
   );
 }

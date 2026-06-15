@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Difficulty, Mode, Theme } from "@/lib/types";
 import DifficultySelector from "./DifficultySelector";
 import ModeSelector from "./ModeSelector";
@@ -71,6 +72,15 @@ export default function StartScreen({
       >
         {ready ? "Empezar" : "Elige nivel y modo"}
       </button>
+
+      <footer className="mt-4 text-center">
+        <Link
+          href="/privacidad"
+          className="text-xs text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
+        >
+          Privacidad
+        </Link>
+      </footer>
     </div>
   );
 }

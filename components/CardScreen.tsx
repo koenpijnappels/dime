@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   modeLabel,
   levelLabel,
@@ -8,6 +9,7 @@ import {
   type Mode,
   type Theme,
 } from "@/lib/types";
+import type { NextMethod } from "@/lib/analytics";
 import ConversationCard from "./ConversationCard";
 import ThemeToggle from "./ThemeToggle";
 
@@ -19,11 +21,13 @@ type Props = {
   showTranslation: boolean;
   canGoBack: boolean;
   onBack: () => void;
-  onNext: () => void;
+  onNext: (method: NextMethod) => void;
   onToggleTranslation: () => void;
   onToggleTheme: () => void;
   onHome: () => void;
   onRestart: () => void;
+  /** Optional inline slot rendered above the controls (feedback prompt). */
+  feedback?: ReactNode;
 };
 
 export default function CardScreen({
@@ -39,6 +43,7 @@ export default function CardScreen({
   onToggleTheme,
   onHome,
   onRestart,
+  feedback,
 }: Props) {
   return (
     <div className="safe-top safe-bottom mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 pb-5">
@@ -75,7 +80,7 @@ export default function CardScreen({
             card={card}
             showTranslation={showTranslation}
             onToggleTranslation={onToggleTranslation}
-            onSwipeNext={onNext}
+            onSwipeNext={() => onNext("swipe")}
           />
         ) : (
           <div className="flex min-h-[58dvh] flex-col items-center justify-center rounded-[2rem] border border-dashed border-line bg-paper/60 px-6 py-10 text-center animate-fade-up">
@@ -106,6 +111,9 @@ export default function CardScreen({
         )}
       </main>
 
+      {/* Feedback prompt (inline, above the controls — never blocks the card) */}
+      {feedback}
+
       {/* Controls */}
       <nav className="flex items-center gap-3">
         <button
@@ -127,7 +135,7 @@ export default function CardScreen({
 
         <button
           type="button"
-          onClick={onNext}
+          onClick={() => onNext("button")}
           disabled={!card}
           className={[
             "flex h-14 flex-[1.6] items-center justify-center gap-2 rounded-2xl text-base font-semibold shadow-card transition-all active:scale-[0.98]",
