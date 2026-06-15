@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { themeBootstrapScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -59,6 +60,7 @@ export default function RootLayout({
         {children}
         {/* Privacy-conscious usage analytics. No-ops when not configured. */}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
