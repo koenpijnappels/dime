@@ -321,6 +321,8 @@ export default function Home() {
             onResponse={handleFeedbackResponse}
             onClose={handleFeedbackClose}
             onShareClicked={handleShareClicked}
+            level={level}
+            mode={mode}
           />
         ) : null
       }

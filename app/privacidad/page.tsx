@@ -71,8 +71,9 @@ export default function PrivacidadPage() {
             <li className="flex gap-3">
               <span aria-hidden="true">📝</span>
               <span>
-                Si compartes una idea a través de un formulario externo, ese
-                formulario puede recibir lo que tú decidas enviar.
+                Si nos envías una idea, guardamos solo el texto que tú decidas
+                escribir, para mejorar la app. Nunca te pedimos tu nombre ni tu
+                correo.
               </span>
             </li>
           </ul>

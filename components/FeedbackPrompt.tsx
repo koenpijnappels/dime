@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { FeedbackResponse } from "@/lib/analytics";
+import { submitSuggestion, type FeedbackResponse } from "@/lib/analytics";
+import type { Difficulty, Mode } from "@/lib/types";
 
 type Props = {
   /** Called once for the user's answer (or "dismissed" via the × button). */
@@ -11,11 +12,12 @@ type Props = {
   onClose: () => void;
   /** Called when the user taps "Compartir Cartita" (for analytics). */
   onShareClicked: () => void;
+  /** Current level/mode, stored alongside a submitted idea for context. */
+  level: Difficulty | null;
+  mode: Mode | null;
 };
 
-type View = "ask" | "thanks-yes" | "thanks-okay" | "idea-open" | "idea-missing";
-
-const feedbackUrl = process.env.NEXT_PUBLIC_FEEDBACK_URL;
+type View = "ask" | "thanks-yes" | "thanks-okay" | "idea-form" | "idea-sent";
 
 /**
  * Small, calm feedback prompt shown once per session after 20 cards.
@@ -26,10 +28,14 @@ export default function FeedbackPrompt({
   onResponse,
   onClose,
   onShareClicked,
+  level,
+  mode,
 }: Props) {
   const [view, setView] = useState<View>("ask");
   const [responded, setResponded] = useState(false);
   const [shareNote, setShareNote] = useState<string | null>(null);
+  const [idea, setIdea] = useState("");
+  const [sending, setSending] = useState(false);
 
   function answer(response: Exclude<FeedbackResponse, "dismissed">, next: View) {
     if (!responded) {
@@ -48,13 +54,17 @@ export default function FeedbackPrompt({
   }
 
   function handleIdea() {
-    if (feedbackUrl) {
-      // Open the external form in a new tab when configured.
-      window.open(feedbackUrl, "_blank", "noopener,noreferrer");
-      answer("idea", "idea-open");
-    } else {
-      answer("idea", "idea-missing");
-    }
+    answer("idea", "idea-form");
+  }
+
+  async function handleSendIdea() {
+    const message = idea.trim();
+    if (!message || sending) return;
+    setSending(true);
+    // Optimistic: thank the user regardless of network outcome.
+    await submitSuggestion(message, level, mode);
+    setSending(false);
+    setView("idea-sent");
   }
 
   function handleClose() {
@@ -180,27 +190,51 @@ export default function FeedbackPrompt({
           </motion.p>
         )}
 
-        {view === "idea-open" && (
+        {view === "idea-form" && (
+          <motion.div
+            key="idea-form"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <label
+              htmlFor="cartita-idea"
+              className="block pr-7 font-serif text-base font-semibold text-ink"
+            >
+              ¿Qué te gustaría ver en Cartita?
+            </label>
+            <textarea
+              id="cartita-idea"
+              value={idea}
+              onChange={(e) => setIdea(e.target.value)}
+              maxLength={2000}
+              rows={3}
+              autoFocus
+              placeholder="Tu idea o sugerencia…"
+              className="mt-3 w-full resize-none rounded-xl border border-line bg-paper px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-terracotta"
+            />
+            <div className="mt-2 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSendIdea}
+                disabled={!idea.trim() || sending}
+                className="rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-paper transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {sending ? "Enviando…" : "Enviar"}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {view === "idea-sent" && (
           <motion.p
-            key="idea-open"
+            key="idea-sent"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="pr-7 font-serif text-base font-semibold text-ink"
           >
-            ¡Gracias! Abrimos el formulario en otra pestaña.
-          </motion.p>
-        )}
-
-        {view === "idea-missing" && (
-          <motion.p
-            key="idea-missing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="pr-7 text-sm text-muted"
-          >
-            Gracias. Todavía no hay formulario de ideas configurado.
+            ¡Gracias por tu idea!
           </motion.p>
         )}
       </AnimatePresence>

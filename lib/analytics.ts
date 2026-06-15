@@ -16,6 +16,7 @@
  */
 
 import { track } from "@vercel/analytics";
+import { getSessionId } from "./session";
 import type { ConversationCard, Difficulty, Mode } from "./types";
 
 /** Method by which the user advanced to the next card. */
@@ -59,6 +60,65 @@ export function trackEvent(
   }
 }
 
+// ── First-party persistence (Neon via our own API) ──────────────────────────
+
+/**
+ * Fire-and-forget POST to one of our `/api/*` routes. Uses `sendBeacon` so the
+ * request survives navigation/unload, falling back to a keepalive `fetch`.
+ * Never throws; a no-op during SSR or when the browser lacks both.
+ */
+function beacon(path: string, payload: Record<string, unknown>): void {
+  try {
+    if (typeof window === "undefined") return;
+    const body = JSON.stringify(payload);
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      navigator.sendBeacon(path, new Blob([body], { type: "application/json" }));
+      return;
+    }
+    void fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Persistence must never break the product experience.
+  }
+}
+
+/** Persist a usage event to our backend, tagged with the current session id. */
+function persistEvent(
+  type: "session_started" | "card_viewed" | "feedback_response",
+  payload: Record<string, unknown> = {}
+): void {
+  const sessionId = getSessionId();
+  if (!sessionId) return;
+  beacon("/api/events", { session_id: sessionId, type, ...payload });
+}
+
+/** Persist a free-text suggestion. Returns whether the server accepted it. */
+export async function submitSuggestion(
+  message: string,
+  level?: Difficulty | null,
+  mode?: Mode | null
+): Promise<boolean> {
+  try {
+    const res = await fetch("/api/suggestions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: getSessionId(),
+        message,
+        level: level ?? null,
+        mode: mode ?? null,
+      }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 // ── App / session ──────────────────────────────────────────────────────────
 
 export function trackAppOpened(): void {
@@ -75,6 +135,7 @@ export function trackModeSelected(mode: Mode): void {
 
 export function trackSessionStarted(level: Difficulty, mode: Mode): void {
   trackEvent("session_started", { level, mode });
+  persistEvent("session_started", { level, mode });
 }
 
 // ── Cards ────────────────────────────────────────────────────────────────--
@@ -88,6 +149,12 @@ export function trackCardViewed(card: ConversationCard): void {
   };
   if (card.intensity !== undefined) props.intensity = card.intensity;
   trackEvent("card_viewed", props);
+  persistEvent("card_viewed", {
+    card_id: card.id,
+    level: card.level,
+    mode: card.mode,
+    intensity: card.intensity ?? null,
+  });
 }
 
 export function trackNextCard(
@@ -128,6 +195,7 @@ export function trackFeedbackPromptShown(): void {
 
 export function trackFeedbackResponse(response: FeedbackResponse): void {
   trackEvent("feedback_response", { response });
+  persistEvent("feedback_response", { response });
 }
 
 export function trackShareClicked(source: string): void {
