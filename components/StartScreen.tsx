@@ -32,7 +32,7 @@ export default function StartScreen({
       <header className="flex items-center justify-between pt-2">
         <div className="flex items-baseline gap-2">
           <span className="font-serif text-3xl font-semibold tracking-tight text-ink">
-            Dime
+            Cartita
           </span>
           <span className="h-2 w-2 rounded-full bg-terracotta" aria-hidden="true" />
         </div>

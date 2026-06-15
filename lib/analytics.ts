@@ -1,5 +1,5 @@
 /**
- * Centralized, privacy-conscious analytics wrapper for Dime.
+ * Centralized, privacy-conscious analytics wrapper for Cartita.
  *
  * The rest of the app calls the small `track*` helpers below instead of
  * importing the analytics provider directly. This keeps event names

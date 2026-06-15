@@ -1,6 +1,6 @@
 import type { Theme } from "./types";
 
-const STORAGE_KEY = "dime:theme";
+const STORAGE_KEY = "cartita:theme";
 
 /** Read the manually saved theme preference, if any. */
 export function getStoredTheme(): Theme | null {

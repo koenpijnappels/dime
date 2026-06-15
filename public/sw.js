@@ -1,6 +1,6 @@
-// Minimal service worker: an offline app shell so Dime is installable and
+// Minimal service worker: an offline app shell so Cartita is installable and
 // keeps working without a connection. Cache-first for navigations.
-const CACHE = "dime-v1";
+const CACHE = "cartita-v1";
 const SHELL = ["/", "/manifest.json"];
 
 self.addEventListener("install", (event) => {

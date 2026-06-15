@@ -58,7 +58,7 @@ export default function CardScreen({
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 11l9-8 9 8M5 10v10h14V10" />
           </svg>
-          <span className="font-serif text-base font-semibold">Dime</span>
+          <span className="font-serif text-base font-semibold">Cartita</span>
         </button>
 
         <div className="flex items-center gap-2">

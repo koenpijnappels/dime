@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacidad — Dime",
+  title: "Privacidad — Cartita",
   description:
-    "Cómo Dime cuida tu privacidad: sin cuentas, sin nombres ni correos, solo estadísticas básicas de uso.",
+    "Cómo Cartita cuida tu privacidad: sin cuentas, sin nombres ni correos, solo estadísticas básicas de uso.",
 };
 
 export default function PrivacidadPage() {
@@ -32,14 +32,14 @@ export default function PrivacidadPage() {
 
         <div className="mt-7 space-y-4 text-[0.975rem] leading-relaxed text-ink">
           <p>
-            Dime es una app para hablar en español. La hicimos para que sea
+            Cartita es una app para hablar en español. La hicimos para que sea
             simple y tranquila, también con tu privacidad.
           </p>
 
           <ul className="space-y-3">
             <li className="flex gap-3">
               <span aria-hidden="true">🔓</span>
-              <span>Dime no necesita ninguna cuenta para usarse.</span>
+              <span>Cartita no necesita ninguna cuenta para usarse.</span>
             </li>
             <li className="flex gap-3">
               <span aria-hidden="true">🙈</span>
@@ -62,7 +62,7 @@ export default function PrivacidadPage() {
             </li>
             <li className="flex gap-3">
               <span aria-hidden="true">🎙️</span>
-              <span>Dime no graba audio.</span>
+              <span>Cartita no graba audio.</span>
             </li>
             <li className="flex gap-3">
               <span aria-hidden="true">🤝</span>
@@ -87,7 +87,7 @@ export default function PrivacidadPage() {
           href="/"
           className="mt-8 inline-flex rounded-2xl bg-terracotta px-6 py-3 font-serif text-base font-semibold text-paper shadow-card transition-all active:scale-[0.99]"
         >
-          Volver a Dime
+          Volver a Cartita
         </Link>
       </main>
     </div>

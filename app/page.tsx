@@ -38,13 +38,13 @@ import type {
 
 type Phase = "start" | "cards";
 
-const LS_LEVEL = "dime:level";
-const LS_MODE = "dime:mode";
+const LS_LEVEL = "cartita:level";
+const LS_MODE = "cartita:mode";
 
 // Per-browser-session keys for the feedback prompt + app-opened guard.
-const SS_APP_OPENED = "dime:app_opened";
-const SS_CARDS_VIEWED = "dime_cards_viewed_count";
-const SS_FEEDBACK_HANDLED = "dime_feedback_prompt_handled";
+const SS_APP_OPENED = "cartita:app_opened";
+const SS_CARDS_VIEWED = "cartita_cards_viewed_count";
+const SS_FEEDBACK_HANDLED = "cartita_feedback_prompt_handled";
 
 const FEEDBACK_THRESHOLD = 20;
 

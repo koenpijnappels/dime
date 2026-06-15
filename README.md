@@ -1,4 +1,4 @@
-# Dime
+# Cartita
 
 **Cartas para hablar en español.** A calm, Mediterranean, mobile-first conversation-card app for Spanish learners and social moments. Pick a difficulty and one of 8 modes, then swipe through large question cards — reveal an English translation any time.
 

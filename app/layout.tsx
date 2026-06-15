@@ -17,14 +17,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Dime — Cartas para hablar en español",
+  title: "Cartita — Cartas para hablar en español",
   description:
     "Cartas de conversación en español para aprender y conectar. Elige un nivel y un modo, y deja que la charla fluya.",
-  applicationName: "Dime",
+  applicationName: "Cartita",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "Dime",
+    title: "Cartita",
     statusBarStyle: "default",
   },
   icons: {

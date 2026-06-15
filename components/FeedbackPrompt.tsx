@@ -9,7 +9,7 @@ type Props = {
   onResponse: (response: FeedbackResponse) => void;
   /** Called when the prompt should be removed from the screen. */
   onClose: () => void;
-  /** Called when the user taps "Compartir Dime" (for analytics). */
+  /** Called when the user taps "Compartir Cartita" (for analytics). */
   onShareClicked: () => void;
 };
 
@@ -71,7 +71,7 @@ export default function FeedbackPrompt({
     const url = typeof window !== "undefined" ? window.location.href : "";
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ title: "Dime", url });
+        await navigator.share({ title: "Cartita", url });
         return;
       }
       if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -79,7 +79,7 @@ export default function FeedbackPrompt({
         setShareNote("Enlace copiado.");
         return;
       }
-      setShareNote("Comparte Dime con quien quieras hablar.");
+      setShareNote("Comparte Cartita con quien quieras hablar.");
     } catch {
       // User cancelled the share sheet, or it's unavailable — stay calm.
     }
@@ -92,7 +92,7 @@ export default function FeedbackPrompt({
       exit={{ opacity: 0, y: 12 }}
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
       role="region"
-      aria-label="Comentarios sobre Dime"
+      aria-label="Comentarios sobre Cartita"
       className="relative mb-3 rounded-2xl border border-line bg-paper/95 px-4 py-3 shadow-soft backdrop-blur"
     >
       <button
@@ -115,7 +115,7 @@ export default function FeedbackPrompt({
             exit={{ opacity: 0 }}
           >
             <p className="pr-7 font-serif text-base font-semibold text-ink">
-              ¿Te gusta Dime?
+              ¿Te gusta Cartita?
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -159,7 +159,7 @@ export default function FeedbackPrompt({
                 onClick={handleShare}
                 className="rounded-full border border-line bg-paper px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-sand active:scale-95"
               >
-                Compartir Dime
+                Compartir Cartita
               </button>
               {shareNote && (
                 <span className="text-sm text-muted">{shareNote}</span>

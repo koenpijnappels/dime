@@ -1,7 +1,7 @@
 import type { ConversationCard } from "./types";
 
 /**
- * The complete Dime question bank: 500 hand-written conversation cards.
+ * The complete Cartita question bank: 500 hand-written conversation cards.
  * Spanish is neutral and broadly understandable across Spain and Latin America.
  * Every card has a natural English translation. Práctica cards include a subtle
  * `hintEs`; Más Profundo cards carry an `intensity` (1–5) used to deepen the flow.
